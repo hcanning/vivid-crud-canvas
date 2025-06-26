@@ -7,15 +7,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Database } from '@/integrations/supabase/types';
 
-interface Item {
-  id: string;
-  title: string;
-  description: string;
-  status: 'active' | 'inactive' | 'pending';
-  created_at: string;
-  user_id: string;
-}
+type Item = Database['public']['Tables']['items']['Row'];
 
 interface ItemListProps {
   onEdit: (item: Item) => void;

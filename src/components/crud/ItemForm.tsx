@@ -10,15 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Database } from '@/integrations/supabase/types';
 
-interface Item {
-  id: string;
-  title: string;
-  description: string;
-  status: 'active' | 'inactive' | 'pending';
-  created_at: string;
-  user_id: string;
-}
+type Item = Database['public']['Tables']['items']['Row'];
 
 interface ItemFormProps {
   item?: Item | null;
@@ -37,8 +31,8 @@ export const ItemForm = ({ item, onClose, onSave }: ItemFormProps) => {
   useEffect(() => {
     if (item) {
       setTitle(item.title);
-      setDescription(item.description);
-      setStatus(item.status);
+      setDescription(item.description || '');
+      setStatus(item.status as 'active' | 'inactive' | 'pending');
     }
   }, [item]);
 

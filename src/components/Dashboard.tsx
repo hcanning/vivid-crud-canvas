@@ -6,15 +6,18 @@ import { ItemList } from '@/components/crud/ItemList';
 import { ItemForm } from '@/components/crud/ItemForm';
 import { LogOut, Plus, Home } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Database } from '@/integrations/supabase/types';
+
+type Item = Database['public']['Tables']['items']['Row'];
 
 export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [showItemForm, setShowItemForm] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const { user, signOut } = useAuth();
 
-  const handleEditItem = (item: any) => {
+  const handleEditItem = (item: Item) => {
     setEditingItem(item);
     setShowItemForm(true);
     setActiveTab('items');
