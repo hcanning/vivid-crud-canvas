@@ -11,6 +11,7 @@ export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { user, signOut } = useAuth();
 
   const handleEditItem = (item: any) => {
@@ -22,6 +23,8 @@ export const Dashboard = () => {
   const handleCloseForm = () => {
     setShowItemForm(false);
     setEditingItem(null);
+    // Refresh the item list by changing the key
+    setRefreshKey(prev => prev + 1);
   };
 
   const handleLogout = async () => {
@@ -167,7 +170,7 @@ export const Dashboard = () => {
                 onSave={handleCloseForm}
               />
             ) : (
-              <ItemList onEdit={handleEditItem} />
+              <ItemList key={refreshKey} onEdit={handleEditItem} />
             )}
           </div>
         )}

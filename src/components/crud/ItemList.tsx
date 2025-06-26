@@ -5,13 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Item {
   id: string;
   title: string;
   description: string;
   status: 'active' | 'inactive' | 'pending';
-  createdAt: string;
+  created_at: string;
+  user_id: string;
 }
 
 interface ItemListProps {
@@ -22,44 +25,73 @@ export const ItemList = ({ onEdit }: ItemListProps) => {
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  // Load items from localStorage on component mount
+  // Load items from Supabase on component mount
   useEffect(() => {
-    const savedItems = localStorage.getItem('items');
-    if (savedItems) {
-      setItems(JSON.parse(savedItems));
-    } else {
-      // Add some sample data
-      const sampleItems: Item[] = [
-        {
-          id: '1',
-          title: 'Sample Task 1',
-          description: 'This is a sample task to demonstrate the CRUD functionality',
-          status: 'active',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          title: 'Sample Task 2',
-          description: 'Another sample task with pending status',
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-        },
-      ];
-      setItems(sampleItems);
-      localStorage.setItem('items', JSON.stringify(sampleItems));
+    if (user) {
+      fetchItems();
     }
-    setIsLoading(false);
-  }, []);
+  }, [user]);
 
-  const handleDelete = (id: string) => {
-    const updatedItems = items.filter(item => item.id !== id);
-    setItems(updatedItems);
-    localStorage.setItem('items', JSON.stringify(updatedItems));
-    toast({
-      title: "Item deleted",
-      description: "The item has been successfully deleted.",
-    });
+  const fetchItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching items:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load items from database.",
+          variant: "destructive",
+        });
+      } else {
+        setItems(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching items:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load items from database.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting item:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete item.",
+          variant: "destructive",
+        });
+      } else {
+        setItems(items.filter(item => item.id !== id));
+        toast({
+          title: "Item deleted",
+          description: "The item has been successfully deleted.",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete item.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -108,7 +140,7 @@ export const ItemList = ({ onEdit }: ItemListProps) => {
           <CardContent>
             <p className="text-gray-600 mb-4">{item.description}</p>
             <p className="text-xs text-gray-400 mb-4">
-              Created: {new Date(item.createdAt).toLocaleDateString()}
+              Created: {new Date(item.created_at).toLocaleDateString()}
             </p>
             <div className="flex space-x-2">
               <Button

@@ -8,13 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Item {
   id: string;
   title: string;
   description: string;
   status: 'active' | 'inactive' | 'pending';
-  createdAt: string;
+  created_at: string;
+  user_id: string;
 }
 
 interface ItemFormProps {
@@ -29,6 +32,7 @@ export const ItemForm = ({ item, onClose, onSave }: ItemFormProps) => {
   const [status, setStatus] = useState<'active' | 'inactive' | 'pending'>('pending');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (item) {
@@ -40,44 +44,84 @@ export const ItemForm = ({ item, onClose, onSave }: ItemFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save items.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      const newItem: Item = {
-        id: item?.id || Date.now().toString(),
-        title,
-        description,
-        status,
-        createdAt: item?.createdAt || new Date().toISOString(),
-      };
-
-      // Get existing items from localStorage
-      const existingItems = JSON.parse(localStorage.getItem('items') || '[]');
-      
-      let updatedItems;
+    try {
       if (item) {
         // Update existing item
-        updatedItems = existingItems.map((existingItem: Item) =>
-          existingItem.id === item.id ? newItem : existingItem
-        );
-        toast({
-          title: "Item updated",
-          description: "The item has been successfully updated.",
-        });
-      } else {
-        // Add new item
-        updatedItems = [...existingItems, newItem];
-        toast({
-          title: "Item created",
-          description: "The item has been successfully created.",
-        });
-      }
+        const { data, error } = await supabase
+          .from('items')
+          .update({
+            title,
+            description,
+            status,
+          })
+          .eq('id', item.id)
+          .select()
+          .single();
 
-      localStorage.setItem('items', JSON.stringify(updatedItems));
-      onSave(newItem);
+        if (error) {
+          console.error('Error updating item:', error);
+          toast({
+            title: "Error",
+            description: "Failed to update item.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Item updated",
+            description: "The item has been successfully updated.",
+          });
+          onSave(data);
+        }
+      } else {
+        // Create new item
+        const { data, error } = await supabase
+          .from('items')
+          .insert({
+            title,
+            description,
+            status,
+            user_id: user.id,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error creating item:', error);
+          toast({
+            title: "Error",
+            description: "Failed to create item.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Item created",
+            description: "The item has been successfully created.",
+          });
+          onSave(data);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save item.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
