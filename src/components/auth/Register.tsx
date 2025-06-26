@@ -5,21 +5,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Mail, Lock } from 'lucide-react';
+import { User, Mail, Lock, Chrome, Github, Twitter } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RegisterProps {
-  onSuccess: (user: any) => void;
   onSwitchToLogin: () => void;
 }
 
-export const Register = ({ onSuccess, onSwitchToLogin }: RegisterProps) => {
+export const Register = ({ onSwitchToLogin }: RegisterProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const { signUp, signInWithProvider } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,26 +33,33 @@ export const Register = ({ onSuccess, onSwitchToLogin }: RegisterProps) => {
       return;
     }
 
-    // Simulate registration and email verification process
-    setTimeout(() => {
-      if (name && email && password) {
-        setShowVerificationMessage(true);
-        // Simulate email verification after 3 seconds
-        setTimeout(() => {
-          onSuccess({
-            id: '1',
-            email,
-            name,
-          });
-        }, 3000);
-      } else {
-        setError('Please fill in all fields');
-        setIsLoading(false);
-      }
-    }, 1000);
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setIsLoading(false);
+      return;
+    }
+
+    const { error } = await signUp(email, password, name);
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccess(true);
+    }
+    
+    setIsLoading(false);
   };
 
-  if (showVerificationMessage) {
+  const handleSocialLogin = async (provider: 'google' | 'github' | 'twitter') => {
+    setError('');
+    const { error } = await signInWithProvider(provider);
+    
+    if (error) {
+      setError(error.message);
+    }
+  };
+
+  if (success) {
     return (
       <Card className="w-full shadow-lg">
         <CardHeader className="text-center">
@@ -67,9 +75,13 @@ export const Register = ({ onSuccess, onSwitchToLogin }: RegisterProps) => {
           <p className="text-sm text-gray-600 mb-4">
             Please check your email and click the verification link to complete your registration.
           </p>
-          <div className="animate-pulse text-blue-600">
-            Verifying your account...
-          </div>
+          <Button 
+            variant="outline" 
+            onClick={onSwitchToLogin}
+            className="w-full"
+          >
+            Back to Sign In
+          </Button>
         </CardContent>
       </Card>
     );
@@ -160,6 +172,43 @@ export const Register = ({ onSuccess, onSwitchToLogin }: RegisterProps) => {
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </Button>
         </form>
+
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => handleSocialLogin('google')}
+              className="w-full"
+            >
+              <Chrome className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSocialLogin('github')}
+              className="w-full"
+            >
+              <Github className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleSocialLogin('twitter')}
+              className="w-full"
+            >
+              <Twitter className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">

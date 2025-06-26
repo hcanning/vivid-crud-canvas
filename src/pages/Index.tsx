@@ -1,37 +1,27 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Login } from '@/components/auth/Login';
 import { Register } from '@/components/auth/Register';
 import { Dashboard } from '@/components/Dashboard';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, loading } = useAuth();
 
-  // Simulate checking for existing session
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    }
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleLogin = (userData: any) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsAuthenticated(false);
-  };
-
-  if (isAuthenticated) {
-    return <Dashboard user={user} onLogout={handleLogout} />;
+  if (user) {
+    return <Dashboard />;
   }
 
   return (
@@ -40,12 +30,10 @@ const Index = () => {
         <div className="w-full max-w-md">
           {showRegister ? (
             <Register 
-              onSuccess={handleLogin}
               onSwitchToLogin={() => setShowRegister(false)}
             />
           ) : (
             <Login 
-              onSuccess={handleLogin}
               onSwitchToRegister={() => setShowRegister(true)}
             />
           )}

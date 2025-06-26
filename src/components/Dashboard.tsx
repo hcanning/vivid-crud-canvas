@@ -5,16 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ItemList } from '@/components/crud/ItemList';
 import { ItemForm } from '@/components/crud/ItemForm';
 import { LogOut, Plus, Home } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface DashboardProps {
-  user: any;
-  onLogout: () => void;
-}
-
-export const Dashboard = ({ user, onLogout }: DashboardProps) => {
+export const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const { user, signOut } = useAuth();
 
   const handleEditItem = (item: any) => {
     setEditingItem(item);
@@ -27,6 +24,10 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
     setEditingItem(null);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -35,7 +36,7 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-semibold text-gray-900">
-                Welcome, {user?.name}
+                Welcome, {user?.email?.split('@')[0]}
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -43,7 +44,7 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="flex items-center space-x-2"
               >
                 <LogOut className="w-4 h-4" />
@@ -95,12 +96,12 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
               <CardHeader>
                 <CardTitle>Welcome to Your App</CardTitle>
                 <CardDescription>
-                  This is a modern CRUD application with authentication
+                  This is a modern CRUD application with real Supabase authentication
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600">
-                  You can manage your items, view analytics, and more. This app is ready to be connected to Supabase for full backend functionality.
+                  You can now manage your items with secure authentication. Your data is stored in Supabase and protected with Row Level Security.
                 </p>
               </CardContent>
             </Card>
@@ -137,9 +138,9 @@ export const Dashboard = ({ user, onLogout }: DashboardProps) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-sm"><strong>Name:</strong> {user?.name}</p>
                   <p className="text-sm"><strong>Email:</strong> {user?.email}</p>
-                  <p className="text-sm"><strong>Status:</strong> <span className="text-green-600">Active</span></p>
+                  <p className="text-sm"><strong>User ID:</strong> {user?.id?.slice(0, 8)}...</p>
+                  <p className="text-sm"><strong>Status:</strong> <span className="text-green-600">Authenticated</span></p>
                 </div>
               </CardContent>
             </Card>
