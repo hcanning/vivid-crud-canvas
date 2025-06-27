@@ -6,4 +6,9 @@ import path from 'path';
 export default defineConfig(({ mode }) => ({
   base: '/vivid-crud-canvas/',
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 }));
