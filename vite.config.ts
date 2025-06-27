@@ -5,11 +5,7 @@ import { componentTagger } from 'lovable-tagger';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  server: {
-    host: '::',
-    port: 8080,
-  },
-  base: '/vivid-crud-canvas',
+  base: '/vivid-crud-canvas/',
   plugins: [react(), mode === 'development' && componentTagger()].filter(
     Boolean
   ),
