@@ -6,9 +6,7 @@ import { componentTagger } from 'lovable-tagger';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   base: '/vivid-crud-canvas/',
-  plugins: [react(), mode === 'development' && componentTagger()].filter(
-    Boolean
-  ),
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
