@@ -4,7 +4,18 @@ import path from 'path';
 import { componentTagger } from 'lovable-tagger';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: '/vivid-crud-canvas/', // <-- Add this line
-  plugins: [react()],
-});
+export default defineConfig(({ mode }) => ({
+  server: {
+    host: '::',
+    port: 8080,
+  },
+  base: '/vivid-crud-canvas',
+  plugins: [react(), mode === 'development' && componentTagger()].filter(
+    Boolean
+  ),
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+}));
